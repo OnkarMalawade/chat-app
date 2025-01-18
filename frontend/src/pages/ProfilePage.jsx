@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Camera, Mail, User } from "lucide-react";
+import {axiosInstance} from "../lib/axios.jsx";
+import { toast } from "react-hot-toast";
 
 const ProfilePage = () => {
-  const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
+  const { authUser, isUpdatingProfile, updateProfile, logout } = useAuthStore();
   const [selectedImg, setSelectedImg] = useState(null);
 
   const handleImageUpload = async (e) => {
@@ -21,6 +23,21 @@ const ProfilePage = () => {
     };
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      if (!window.confirm("Are you sure you want to delete your account?")) return;
+  
+      await axiosInstance.delete("/auth/delete-account");
+  
+      toast.success("Account deleted successfully");
+      logout();
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "An error occurred while deleting the account";
+      toast.error(errorMessage);
+    }
+  };
+  
+
   return (
     <div className="h-screen pt-20">
       <div className="max-w-2xl mx-auto p-4 py-8">
@@ -31,7 +48,6 @@ const ProfilePage = () => {
           </div>
 
           {/* avatar upload section */}
-
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <img
@@ -41,13 +57,11 @@ const ProfilePage = () => {
               />
               <label
                 htmlFor="avatar-upload"
-                className={`
-                  absolute bottom-0 right-0 
+                className={`absolute bottom-0 right-0 
                   bg-base-content hover:scale-105
                   p-2 rounded-full cursor-pointer 
                   transition-all duration-200
-                  ${isUpdatingProfile ? "animate-pulse pointer-events-none" : ""}
-                `}
+                  ${isUpdatingProfile ? "animate-pulse pointer-events-none" : ""}`}
               >
                 <Camera className="w-5 h-5 text-base-200" />
                 <input
@@ -84,7 +98,7 @@ const ProfilePage = () => {
           </div>
 
           <div className="mt-6 bg-base-300 rounded-xl p-6">
-            <h2 className="text-lg font-medium  mb-4">Account Information</h2>
+            <h2 className="text-lg font-medium mb-4">Account Information</h2>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between py-2 border-b border-zinc-700">
                 <span>Member Since</span>
@@ -96,9 +110,20 @@ const ProfilePage = () => {
               </div>
             </div>
           </div>
+
+          {/* Delete account section */}
+          <div className="text-center mt-8">
+            <button
+              className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition"
+              onClick={handleDeleteAccount}
+            >
+              Delete Account
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
 export default ProfilePage;
