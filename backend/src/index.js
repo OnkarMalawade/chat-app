@@ -1,33 +1,44 @@
 import express from "express";
-import dotenv from "dotenv"; 
-import authRoutes from "./routes/auth.route.js";
-import { connectDB } from "./lib/db.js";
+import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-import messageRoutes from "./routes/message.route.js";
 import cors from "cors";
 
+import path from "path";
+
+import { connectDB } from "./lib/db.js";
+
+import authRoutes from "./routes/auth.route.js";
+import messageRoutes from "./routes/message.route.js";
+import { app, server } from "./lib/socket.js";
+
 dotenv.config();
-const app = express();
 
 const PORT = process.env.PORT;
+const __dirname = path.resolve();
 
-// Middleware
-app.use(express.json({ limit: "10mb" })); // Handles JSON payloads
-app.use(express.urlencoded({ limit: "10mb", extended: true })); // Handles URL-encoded data
+app.use(express.json({ limit: '50mb' })); // Increase limit to 50MB
+app.use(express.urlencoded({ limit: '50mb', extended: true })); // Increase limit to 50MB
+
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173", // Frontend origin
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
 
-// Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/message", messageRoutes);
+app.use("/api/messages", messageRoutes);
 
-// Start server
-app.listen(PORT, () => {
-  console.log("Backend server is running! http://localhost:" + PORT);
-  connectDB(); // Ensure database connection is initialized
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+  });
+}
+
+server.listen(PORT, () => {
+  console.log("server is running on PORT:" + PORT);
+  connectDB();
 });
