@@ -11,19 +11,23 @@ const app = express();
 
 const PORT = process.env.PORT;
 
-// for middleware
-app.use(express.json());
+// Middleware
+app.use(express.json({ limit: "10mb" })); // Handles JSON payloads
+app.use(express.urlencoded({ limit: "10mb", extended: true })); // Handles URL-encoded data
 app.use(cookieParser());
-app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Frontend origin
+    credentials: true,
+  })
+);
 
+// Routes
 app.use("/api/auth", authRoutes);
-
 app.use("/api/message", messageRoutes);
 
+// Start server
 app.listen(PORT, () => {
-    console.log("Backend server is running! http://localhost:" + PORT);
-    connectDB();
+  console.log("Backend server is running! http://localhost:" + PORT);
+  connectDB(); // Ensure database connection is initialized
 });
